@@ -128,7 +128,7 @@
             position: absolute;
             width: 100%;
             height: 100%;
-            transition: transform 0.1s ease-out;
+            will-change: transform;
         }
         
         /* Card animations */
@@ -403,20 +403,36 @@
             }
         }
         
-        // Parallax scrolling effect
-        function handleParallax() {
+        // Parallax scrolling effect with requestAnimationFrame
+        let parallaxTicking = false;
+        let lastScrollY = 0;
+        
+        function updateParallax() {
             const parallaxLayers = document.querySelectorAll('.parallax-layer');
-            const scrolled = window.pageYOffset;
+            const scrolled = lastScrollY;
             
             parallaxLayers.forEach(layer => {
                 const speed = layer.dataset.speed || 0.5;
                 const yPos = -(scrolled * speed);
-                layer.style.transform = `translateY(${yPos}px)`;
+                layer.style.transform = `translate3d(0, ${yPos}px, 0)`;
             });
+            
+            parallaxTicking = false;
         }
         
-        // Reveal elements on scroll
-        function handleReveal() {
+        function handleParallax() {
+            lastScrollY = window.pageYOffset;
+            
+            if (!parallaxTicking) {
+                requestAnimationFrame(updateParallax);
+                parallaxTicking = true;
+            }
+        }
+        
+        // Reveal elements on scroll with requestAnimationFrame
+        let revealTicking = false;
+        
+        function updateReveal() {
             const reveals = document.querySelectorAll('.reveal');
             
             reveals.forEach(element => {
@@ -428,6 +444,15 @@
                     element.classList.add('active');
                 }
             });
+            
+            revealTicking = false;
+        }
+        
+        function handleReveal() {
+            if (!revealTicking) {
+                requestAnimationFrame(updateReveal);
+                revealTicking = true;
+            }
         }
         
         // Smooth scroll to section
@@ -436,20 +461,39 @@
             section.scrollIntoView({ behavior: 'smooth' });
         }
         
-        // Mouse parallax effect for hero section
-        function handleMouseParallax(e) {
+        // Mouse parallax effect for hero section with requestAnimationFrame
+        let mouseTicking = false;
+        let mouseX = 0;
+        let mouseY = 0;
+        
+        function updateMouseParallax() {
             const hero = document.getElementById('hero');
-            if (!hero) return;
+            if (!hero) {
+                mouseTicking = false;
+                return;
+            }
             
             const heroRect = hero.getBoundingClientRect();
-            if (window.pageYOffset > heroRect.height) return;
-            
-            const mouseX = (e.clientX - window.innerWidth / 2) / window.innerWidth;
-            const mouseY = (e.clientY - window.innerHeight / 2) / window.innerHeight;
+            if (window.pageYOffset > heroRect.height) {
+                mouseTicking = false;
+                return;
+            }
             
             const speedLinesContainer = document.getElementById('speed-lines-container');
             if (speedLinesContainer) {
-                speedLinesContainer.style.transform = `translate(${mouseX * 20}px, ${mouseY * 20}px)`;
+                speedLinesContainer.style.transform = `translate3d(${mouseX * 20}px, ${mouseY * 20}px, 0)`;
+            }
+            
+            mouseTicking = false;
+        }
+        
+        function handleMouseParallax(e) {
+            mouseX = (e.clientX - window.innerWidth / 2) / window.innerWidth;
+            mouseY = (e.clientY - window.innerHeight / 2) / window.innerHeight;
+            
+            if (!mouseTicking) {
+                requestAnimationFrame(updateMouseParallax);
+                mouseTicking = true;
             }
         }
         
@@ -467,13 +511,13 @@
             createParticles();
             handleReveal();
             
-            // Add event listeners
+            // Add event listeners with passive flag for better performance
             window.addEventListener('scroll', () => {
                 handleParallax();
                 handleReveal();
-            });
+            }, { passive: true });
             
-            window.addEventListener('mousemove', handleMouseParallax);
+            window.addEventListener('mousemove', handleMouseParallax, { passive: true });
             
             // Initial reveal for elements already in view
             setTimeout(() => {
