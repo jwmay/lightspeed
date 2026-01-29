@@ -404,7 +404,7 @@
         }
         
         // Parallax scrolling effect with requestAnimationFrame
-        let ticking = false;
+        let parallaxTicking = false;
         let lastScrollY = 0;
         
         function updateParallax() {
@@ -417,15 +417,15 @@
                 layer.style.transform = `translate3d(0, ${yPos}px, 0)`;
             });
             
-            ticking = false;
+            parallaxTicking = false;
         }
         
         function handleParallax() {
             lastScrollY = window.pageYOffset;
             
-            if (!ticking) {
+            if (!parallaxTicking) {
                 requestAnimationFrame(updateParallax);
-                ticking = true;
+                parallaxTicking = true;
             }
         }
         
